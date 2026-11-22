@@ -15,7 +15,7 @@ public class ElementSpawner : MonoBehaviour
     public void SpawnElement()
     {
         //no hay nada :O
-        if(Spawnables != null) return;
+        if(Spawnables == null) return;
 
         //hay algo y escogiste algo :O
         Instantiate(Spawnables[SelectElement], SpawnPoint.position, SpawnPoint.rotation);
