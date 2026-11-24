@@ -19,6 +19,7 @@ public class ElementSpawner : MonoBehaviour
 
         //hay algo y escogiste algo :O
         Instantiate(Spawnables[SelectElement], SpawnPoint.position, SpawnPoint.rotation);
+        //AudioManager.Instance.PlayAudio();
     }
 
     //objeto siguiente en el array  
