@@ -1,25 +1,33 @@
 using UnityEngine;
+using UnityEngine.Events;
 
+// Driver visual del tornillo: rota y hunde el modelo segun el giro que le manda el destornillador.
+// Ponlo en el MODELO 3D (hijo) y no en la raiz que agarra el socket, para que no peleen por la posicion.
 public class Screw : MonoBehaviour
 {
     [Header("Rosca")]
-    [Tooltip("Eje del tornillo")]
+    [Tooltip("Eje del tornillo (local). Al apretar, el tornillo avanza hacia este eje")]
     [SerializeField] Vector3 localAxis = Vector3.forward;
     [Tooltip("Vueltas totales")]
-    [SerializeField] float VueltasTotales;
+    [SerializeField] float VueltasTotales = 5f;
     [Tooltip("Profundidad total del tornillo")]
-    [SerializeField] float Profundidad;
+    [SerializeField] float Profundidad = 0.02f;
+    [Tooltip("1 = apretar es sentido horario mirando hacia el eje. Pon -1 para invertirlo")]
+    [SerializeField] float dirGiro = 1f;
 
-    [Header("Input")]
-    [SerializeField] float deadzoneDeg = 0.3f;
+    [Header("Eventos")]
+    [Tooltip("Se dispara UNA sola vez, la primera vez que el tornillo llega al final")]
+    public UnityEvent OnApretado;
 
     Vector3 startPos;
     Quaternion startRot;
+    float anguloActual; // grados acumulados: 0 .. VueltasTotales * 360
     float progreso;
-    float dirGiro = 1;
+    bool yaApretado;
 
     public float Progress => progreso;
     public bool Apretado => progreso >= 1f;
+    public Vector3 EjeMundo => transform.TransformDirection(localAxis.normalized);
 
     void Awake()
     {
@@ -27,15 +35,28 @@ public class Screw : MonoBehaviour
         startRot = transform.localRotation;
     }
 
+    // deltaDegrees: giro de ESTE frame alrededor del eje (positivo = apretar). El tornillo acumula el total.
     public void ApplyRotation(float deltaDegrees)
     {
-        if (Mathf.Abs(deltaDegrees) < deadzoneDeg) return;
+        if (VueltasTotales <= 0f) return;
 
-        progreso= (deltaDegrees * dirGiro) / (360f * VueltasTotales);
-        progreso = Mathf.Clamp01(progreso);
+        float maxAngulo = VueltasTotales * 360f;
+        anguloActual = Mathf.Clamp(anguloActual + deltaDegrees * dirGiro, 0f, maxAngulo);
+        progreso = anguloActual / maxAngulo;
 
-        float angle = progreso * VueltasTotales * 360f;
-        transform.localRotation = startRot * Quaternion.AngleAxis(angle, localAxis);
-        transform.localPosition = startPos + localAxis.normalized * (progreso * Profundidad);
+        transform.localRotation = startRot * Quaternion.AngleAxis(anguloActual, localAxis);
+        transform.localPosition = startPos + (startRot * localAxis.normalized) * (progreso * Profundidad);
+
+        if (!yaApretado && progreso >= 1f)
+        {
+            yaApretado = true;
+            OnApretado.Invoke();
+        }
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.blue;
+        Gizmos.DrawRay(transform.position, EjeMundo * 0.1f);
     }
 }
