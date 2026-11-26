@@ -1,44 +1,37 @@
-using System;
-using System.Linq;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class ElementSpawner : MonoBehaviour
 {
-    [Tooltip("Posicion de generacion sobre la Conveyorde elementos")]
-    [SerializeField] Transform SpawnPoint;
-    [Tooltip("Elegir elemento a spawnear")]
+    [SerializeField] Transform SpawnScrew;
+    [SerializeField] Transform SpawnObjects;
     public int SelectElement = 0;
     [Tooltip("Conjunto de elementos spawneables")]
     [SerializeField] GameObject[] Spawnables;
-    
+    [SerializeField] List<GameObject> Objetosdispo;
 
-    public void SpawnElement()
+    public void Spawnscrew()
     {
         //no hay nada :O
         if(Spawnables == null) return;
 
         //hay algo y escogiste algo :O
-        Instantiate(Spawnables[SelectElement], SpawnPoint.position, SpawnPoint.rotation);
-        //AudioManager.Instance.PlayAudio();
+        Instantiate(Spawnables[0], SpawnScrew.position, SpawnScrew.rotation);
     }
 
-    //objeto siguiente en el array  
-    public void NextObject()
+    // Lo llama el arbol de mejoras al comprar un nodo NewObject
+    public void Desbloquear(GameObject prefab)
     {
-        //Si el selector es menor que el total de elementos en el array
-        if(SelectElement < Spawnables.Length - 1)
-        {
-            SelectElement++;
-        }
+        if (prefab == null) return;
+        if (Objetosdispo == null) Objetosdispo = new List<GameObject>();
+        if (!Objetosdispo.Contains(prefab)) Objetosdispo.Add(prefab);
     }
-    
-    //objeto anterior en array
-    public void LastObject()
+
+    public void SpawnObj()
     {
-        //Si el elemento a escoger no es 0, puede volver al anterior
-        if(SelectElement > 0)
-        {
-            SelectElement--;
-        }
+        if(Objetosdispo == null) return;
+
+        int i = Random.Range(0, Objetosdispo.Count);
+        Instantiate(Objetosdispo[i], SpawnObjects.position,SpawnObjects.rotation);
     }
 }
